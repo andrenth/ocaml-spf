@@ -1,6 +1,13 @@
 type t
 
 val create : Spf_server.t -> t
+
+val init : Spf_server.t
+        -> [`Ipv4_string of string | `Ipv6_string of string]
+        -> ?helo:string
+        -> ?from:string
+        -> unit -> t
+
 val free : t -> unit
 
 val set_ipv4_str : t -> string -> unit

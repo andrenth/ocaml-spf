@@ -11,8 +11,9 @@ Library spf
   CompiledObject:  best
   Modules:         Spf, Spf_dns, Spf_request, Spf_response, Spf_server
   CSources:        spf_stubs.c
-  CCLib:          -lspf2
-  CCOpt:          -Wall -Werror
+  InternalModules: Option
+  CCLib:           -lspf2
+  CCOpt:           -Wall -Werror
 
 Executable spf_test
   Path:            lib_test

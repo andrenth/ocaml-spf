@@ -14,3 +14,12 @@ external set_envelope_from : t -> string -> unit =
 
 external query_mailfrom : t -> Spf_response.t =
   "caml_spf_request_query_mailfrom"
+
+let init server ip ?helo ?from () =
+  let req = create server in
+  (match ip with
+  | `Ipv4_string s -> set_ipv4_str req s
+  | `Ipv6_string s -> set_ipv6_str req s);
+  Option.may (set_helo_domain req) helo;
+  Option.may (set_envelope_from req) from;
+  req
