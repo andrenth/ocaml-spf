@@ -1,5 +1,7 @@
 type t
 
+exception Spf_request_error of string
+
 val create : Spf_server.t -> t
 
 val init : Spf_server.t

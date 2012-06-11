@@ -1,5 +1,11 @@
 type t
 
+exception Spf_request_error of string
+
+let _ = Callback.register_exception
+  "Spf_request.Spf_request_error"
+  (Spf_request_error "")
+
 external create : Spf_server.t -> t = "caml_spf_request_new"
 external free : t -> unit = "caml_spf_request_free"
 

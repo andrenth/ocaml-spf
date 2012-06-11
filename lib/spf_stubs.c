@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <netinet/in.h>
 
 #include <spf2/spf.h>
@@ -8,11 +9,9 @@
 #include <spf2/spf_log.h>
 
 #include <caml/mlvalues.h>
-#include <caml/alloc.h>
 #include <caml/callback.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
-#include <caml/signals.h>
 
 #define Some_val(v)    Field(v,0)
 #define Val_none       Val_int(0)
@@ -33,15 +32,10 @@ dns_type_of_val(value v)
 }
 
 static void
-spf_error(const char *s)
+spf_request_error(const char *err)
 {
-    CAMLlocal2(exn, msg);
-
-    exn = alloc_small(2, 0);
-    msg = caml_copy_string(s);
-    Field(exn, 0) = *caml_named_value("Spf.Spf_error");
-    Field(exn, 1) = msg;
-    caml_raise(exn);
+    const char *exn = "Spf_request.Spf_request_error";
+    caml_raise_with_string(*caml_named_value(exn), err);
 }
 
 CAMLprim value
@@ -57,11 +51,11 @@ caml_spf_server_new(value debug_val, value dns_type_val)
 
     dns_type = dns_type_of_val(dns_type_val);
     if (dns_type == -1)
-        spf_error("unknown DNS type");
+        caml_invalid_argument("unknown DNS type");
 
     server = SPF_server_new(dns_type, debug);
     if (server == NULL)
-        spf_error("cannot create SPF server");
+        caml_failwith("cannot create SPF server");
 
     CAMLreturn((value)server);
 }
@@ -84,7 +78,7 @@ caml_spf_request_new(value server_val)
     
     req = SPF_request_new(server);
     if (req == NULL)
-        spf_error("cannot create SPF request");
+        spf_request_error("cannot create SPF request");
 
     CAMLreturn((value)req);
 }
@@ -109,7 +103,7 @@ caml_spf_request_set_##name(value req_val, value str_val) \
                                                           \
     err = SPF_request_set_##name(req, str);               \
     if (err != 0)                                         \
-        spf_error(SPF_strerror(err));                     \
+        spf_request_error(SPF_strerror(err));                     \
     CAMLreturn(Val_unit);                                 \
 }
 
@@ -129,7 +123,7 @@ caml_spf_request_query_mailfrom(value req_val)
 
     err = SPF_request_query_mailfrom(req, &resp);
     if (err != 0)
-        spf_error(SPF_strerror(err));
+        spf_request_error(SPF_strerror(err));
 
     res = Val_int(SPF_response_result(resp));
     SPF_response_free(resp);

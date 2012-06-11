@@ -1,8 +1,8 @@
 # OASIS_START
-# DO NOT EDIT (digest: 5200eb34ab40efc63af0549de612c87a)
-Spf
+# DO NOT EDIT (digest: b0c9a81a46d81998b72247b919918e70)
 Spf_dns
 Spf_request
 Spf_response
 Spf_server
+Option
 # OASIS_STOP
