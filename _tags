@@ -1,0 +1,16 @@
+# OASIS_START
+# DO NOT EDIT (digest: 22085bb353923352c45396a1de6143de)
+# Library spf
+"lib": include
+<lib/*.ml{,i}>: oasis_library_spf_ccopt
+"lib/spf_stubs.c": oasis_library_spf_ccopt
+<lib/spf.{cma,cmxa}>: oasis_library_spf_cclib
+"lib/libspf.lib": oasis_library_spf_cclib
+"lib/dllspf.dll": oasis_library_spf_cclib
+"lib/libspf.a": oasis_library_spf_cclib
+"lib/dllspf.so": oasis_library_spf_cclib
+<lib/spf.{cma,cmxa}>: use_libspf
+# Executable spf_test
+<lib_test/test.{native,byte}>: use_spf
+<lib_test/*.ml{,i}>: use_spf
+# OASIS_STOP
