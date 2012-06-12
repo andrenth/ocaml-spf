@@ -1,4 +1,9 @@
-type t
+type request
+
+type t =
+  { request : request
+  ; server  : Spf_server.t
+  }
 
 exception Spf_request_error of string
 
@@ -6,26 +11,61 @@ let _ = Callback.register_exception
   "Spf_request.Spf_request_error"
   (Spf_request_error "")
 
-external create : Spf_server.t -> t = "caml_spf_request_new"
-external free : t -> unit = "caml_spf_request_free"
+external spf_request_new : Spf_server.t -> request = "caml_spf_request_new"
 
-external set_ipv4_str : t -> string -> unit =
+external spf_request_free : request -> unit = "caml_spf_request_free"
+
+external request_set_ipv4_str : request -> string -> unit =
   "caml_spf_request_set_ipv4_str"
-external set_ipv6_str : t -> string -> unit =
+
+external request_set_ipv6_str : request -> string -> unit =
   "caml_spf_request_set_ipv6_str"
-external set_helo_domain : t -> string -> unit =
+
+external request_set_helo_domain : request -> string -> unit =
   "caml_spf_request_set_helo_dom"
-external set_envelope_from : t -> string -> unit =
+
+external request_set_envelope_from : request -> string -> unit =
   "caml_spf_request_set_env_from"
 
-external query_mailfrom : t -> Spf_response.t =
+external query_mailfrom : request -> Spf_response.t =
   "caml_spf_request_query_mailfrom"
 
-let init server ip ?helo ?from () =
-  let req = create server in
-  (match ip with
+let create server =
+  let req = spf_request_new server in
+  { request = req; server = server }
+
+let free req =
+  spf_request_free req.request
+
+let set_ipv4_str req ip =
+  request_set_ipv4_str req.request ip
+
+let set_ipv6_str req ip =
+  request_set_ipv6_str req.request ip
+
+let set_helo_domain req domain =
+  request_set_helo_domain req.request domain
+
+let set_envelope_from req from =
+  request_set_envelope_from req.request from
+
+let process req =
+  try
+    `Response (query_mailfrom req.request)
+  with Spf_request_error err ->
+    `Error err
+
+let check_helo req client_addr helo =
+  (match client_addr with
   | `Ipv4_string s -> set_ipv4_str req s
   | `Ipv6_string s -> set_ipv6_str req s);
-  Option.may (set_helo_domain req) helo;
-  Option.may (set_envelope_from req) from;
-  req
+  set_helo_domain req helo;
+  process req
+
+let check_from req client_addr helo from =
+  (match client_addr with
+  | `Ipv4_string s -> set_ipv4_str req s
+  | `Ipv6_string s -> set_ipv6_str req s);
+  set_helo_domain req helo;
+  set_envelope_from req from;
+  process req
