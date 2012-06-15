@@ -55,17 +55,23 @@ let process req =
   with Spf_request_error err ->
     `Error err
 
-let check_helo req client_addr helo =
+let check_helo server client_addr helo =
+  let req = create server in
   (match client_addr with
   | `Ipv4_string s -> set_ipv4_str req s
   | `Ipv6_string s -> set_ipv6_str req s);
   set_helo_domain req helo;
-  process req
+  let ret = process req in
+  free req;
+  ret
 
-let check_from req client_addr helo from =
+let check_from server client_addr helo from =
+  let req = create server in
   (match client_addr with
   | `Ipv4_string s -> set_ipv4_str req s
   | `Ipv6_string s -> set_ipv6_str req s);
   set_helo_domain req helo;
   set_envelope_from req from;
-  process req
+  let ret = process req in
+  free req;
+  ret

@@ -9,11 +9,12 @@
 #include <spf2/spf_log.h>
 
 #include <caml/mlvalues.h>
+#include <caml/alloc.h>
 #include <caml/callback.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
 
-#define Some_val(v)    Field(v,0)
+#define Some_val(v)    Field(v, 0)
 #define Val_none       Val_int(0)
 
 static int
@@ -103,7 +104,7 @@ caml_spf_request_set_##name(value req_val, value str_val) \
                                                           \
     err = SPF_request_set_##name(req, str);               \
     if (err != 0)                                         \
-        spf_request_error(SPF_strerror(err));                     \
+        spf_request_error(SPF_strerror(err));             \
     CAMLreturn(Val_unit);                                 \
 }
 
@@ -112,21 +113,85 @@ SPF_REQUEST_SET_STRING(ipv6_str);
 SPF_REQUEST_SET_STRING(helo_dom);
 SPF_REQUEST_SET_STRING(env_from);
 
+static inline int
+tag_of_result(SPF_result_t r)
+{
+    switch (r) {
+    case SPF_RESULT_INVALID:
+        return 0;
+    case SPF_RESULT_NEUTRAL:
+        return 0;
+    case SPF_RESULT_PASS:
+        return 1;
+    case SPF_RESULT_FAIL:
+        return 1;
+    case SPF_RESULT_SOFTFAIL:
+        return 2;
+    case SPF_RESULT_NONE:
+        return 3;
+    case SPF_RESULT_TEMPERROR:
+        return 2;
+    case SPF_RESULT_PERMERROR:
+        return 3;
+    default:
+        spf_request_error("unexpected result");
+        /* NOTREACHED */
+        return -1;
+    }
+}
+
 CAMLprim value
 caml_spf_request_query_mailfrom(value req_val)
 {
     CAMLparam1(req_val);
-    CAMLlocal1(res);
+    CAMLlocal3(resp, cmt, res);
     SPF_request_t *req = (SPF_request_t *)req_val;
-    SPF_response_t *resp;
+    SPF_response_t *r;
+    SPF_result_t result;
     SPF_errcode_t err;
 
-    err = SPF_request_query_mailfrom(req, &resp);
+    err = SPF_request_query_mailfrom(req, &r);
     if (err != 0)
         spf_request_error(SPF_strerror(err));
 
-    res = Val_int(SPF_response_result(resp));
-    SPF_response_free(resp);
+    resp = caml_alloc(5, 0);
 
-    CAMLreturn(res);
+    result = SPF_response_result(r);
+    resp = caml_alloc(1, tag_of_result(result));
+
+    switch (result) {
+    case SPF_RESULT_FAIL:
+    case SPF_RESULT_SOFTFAIL:
+    case SPF_RESULT_NEUTRAL:
+    case SPF_RESULT_NONE:
+        cmt = caml_alloc(2, 0);
+        Store_field(cmt, 0, caml_copy_string(SPF_response_get_smtp_comment(r)));
+        Store_field(cmt, 1, caml_copy_string(SPF_response_get_explanation(r)));
+        res = caml_alloc(1, tag_of_result(result));
+        Store_field(res, 0, cmt);
+        Store_field(resp, 0, res);
+        break;
+    case SPF_RESULT_INVALID:
+    case SPF_RESULT_PASS:
+    case SPF_RESULT_TEMPERROR:
+    case SPF_RESULT_PERMERROR:
+        Store_field(resp, 0, Val_int(tag_of_result(result)));
+        break;
+    }
+
+    Store_field(resp, 1, Val_int(SPF_response_reason(r)));
+    Store_field(resp, 2, caml_copy_string(SPF_response_get_received_spf(r)));
+    Store_field(resp, 3, caml_copy_string(SPF_response_get_received_spf_value(r)));
+    Store_field(resp, 4, caml_copy_string(SPF_response_get_header_comment(r)));
+
+    SPF_response_free(r);
+
+    CAMLreturn(resp);
+}
+
+CAMLprim value
+caml_spf_strreason(value reason_val)
+{
+    CAMLparam1(reason_val);
+    CAMLreturn(caml_copy_string(SPF_strreason(Int_val(reason_val))));
 }
