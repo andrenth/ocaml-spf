@@ -1,5 +1,9 @@
+#include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <netinet/in.h>
+#include <netinet/in.h>
+#include <sys/un.h>
 
 #include <spf2/spf.h>
 #include <spf2/spf_server.h>
@@ -13,6 +17,8 @@
 #include <caml/callback.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
+#include <caml/signals.h>
+#include <caml/unixsupport.h>
 
 #define Some_val(v)    Field(v, 0)
 #define Val_none       Val_int(0)
@@ -93,6 +99,58 @@ caml_spf_request_free(value req_val)
     CAMLreturn(Val_unit);
 }
 
+static void
+spf_get_sockaddr(value addr_val, struct sockaddr_storage *ss,
+                 socklen_t *ss_len)
+{
+    mlsize_t len = caml_string_length(addr_val);
+
+    switch (len) {
+    case 4: {
+        struct sockaddr_in *sin = (struct sockaddr_in *)ss;
+        memset(sin, 0, sizeof(struct sockaddr_in));
+        sin->sin_family = AF_INET;
+        sin->sin_addr = (*((struct in_addr *)(addr_val)));
+        *ss_len = sizeof(struct sockaddr_in);
+        break;
+    }
+    case 16: {
+        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)ss;
+        memset(sin6, 0, sizeof(struct sockaddr_in6));
+        sin6->sin6_family = AF_INET6;
+        sin6->sin6_addr = (*((struct in6_addr *)(addr_val)));
+        *ss_len = sizeof(struct sockaddr_in6);
+        break;
+    }
+    default:
+        spf_request_error("unsupported address type");
+    }
+}
+
+CAMLprim value
+caml_spf_request_set_inet_addr(value req_val, value addr)
+{
+    CAMLparam2(req_val, addr);
+    SPF_request_t *req = (SPF_request_t *)req_val;
+    struct sockaddr_storage ss;
+    socklen_t ss_len;
+    SPF_errcode_t e;
+
+    spf_get_sockaddr(addr, &ss, &ss_len);
+    switch (ss.ss_family) {
+    case AF_INET:
+        e = SPF_request_set_ipv4(req, ((struct sockaddr_in *)&ss)->sin_addr);
+        break;
+    case AF_INET6:
+        e = SPF_request_set_ipv6(req, ((struct sockaddr_in6 *)&ss)->sin6_addr);
+        break;
+    }
+    if (e != SPF_E_SUCCESS)
+        spf_request_error(SPF_strerror(e));
+
+    CAMLreturn(Val_unit);
+}
+
 #define SPF_REQUEST_SET_STRING(name)                      \
 CAMLprim value                                            \
 caml_spf_request_set_##name(value req_val, value str_val) \
@@ -103,7 +161,7 @@ caml_spf_request_set_##name(value req_val, value str_val) \
     SPF_errcode_t err;                                    \
                                                           \
     err = SPF_request_set_##name(req, str);               \
-    if (err != 0)                                         \
+    if (err != SPF_E_SUCCESS)                             \
         spf_request_error(SPF_strerror(err));             \
     CAMLreturn(Val_unit);                                 \
 }

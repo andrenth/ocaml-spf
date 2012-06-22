@@ -21,4 +21,4 @@ Executable spf_test
   MainIs:          test.ml
   Install:         false
   CompiledObject:  best
-  BuildDepends:    spf
+  BuildDepends:    spf, unix

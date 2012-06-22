@@ -7,12 +7,12 @@ val create : Spf_server.t -> t
 val free : t -> unit
 
 val check_helo : Spf_server.t
-              -> [`Ipv4_string of string | `Ipv6_string of string]
+              -> Unix.inet_addr
               -> string
               -> [`Response of Spf_response.t | `Error of string]
 
 val check_from : Spf_server.t
-              -> [`Ipv4_string of string | `Ipv6_string of string]
+              -> Unix.inet_addr
               -> string
               -> string
               -> [`Response of Spf_response.t | `Error of string]

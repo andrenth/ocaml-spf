@@ -15,6 +15,9 @@ external spf_request_new : Spf_server.t -> request = "caml_spf_request_new"
 
 external spf_request_free : request -> unit = "caml_spf_request_free"
 
+external request_set_inet_addr : request -> Unix.inet_addr -> unit =
+  "caml_spf_request_set_inet_addr"
+
 external request_set_ipv4_str : request -> string -> unit =
   "caml_spf_request_set_ipv4_str"
 
@@ -37,6 +40,9 @@ let create server =
 let free req =
   spf_request_free req.request
 
+let set_inet_addr req ip =
+  request_set_inet_addr req.request ip
+
 let set_ipv4_str req ip =
   request_set_ipv4_str req.request ip
 
@@ -57,9 +63,7 @@ let process req =
 
 let check_helo server client_addr helo =
   let req = create server in
-  (match client_addr with
-  | `Ipv4_string s -> set_ipv4_str req s
-  | `Ipv6_string s -> set_ipv6_str req s);
+  set_inet_addr req client_addr;
   set_helo_domain req helo;
   let ret = process req in
   free req;
@@ -67,9 +71,7 @@ let check_helo server client_addr helo =
 
 let check_from server client_addr helo from =
   let req = create server in
-  (match client_addr with
-  | `Ipv4_string s -> set_ipv4_str req s
-  | `Ipv6_string s -> set_ipv6_str req s);
+  set_inet_addr req client_addr;
   set_helo_domain req helo;
   set_envelope_from req from;
   let ret = process req in

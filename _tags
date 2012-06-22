@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 22085bb353923352c45396a1de6143de)
+# DO NOT EDIT (digest: ad9dfa9e36192b3a3a55b072a2f734f4)
 # Library spf
 "lib": include
 <lib/*.ml{,i}>: oasis_library_spf_ccopt
@@ -12,5 +12,8 @@
 <lib/spf.{cma,cmxa}>: use_libspf
 # Executable spf_test
 <lib_test/test.{native,byte}>: use_spf
+<lib_test/test.{native,byte}>: pkg_unix
 <lib_test/*.ml{,i}>: use_spf
+<lib_test/*.ml{,i}>: pkg_unix
 # OASIS_STOP
+<*/*.ml>: annot

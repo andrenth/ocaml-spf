@@ -2,7 +2,7 @@ open Printf
 
 let () =
   let server = Spf_server.create Spf_dns.Dns_cache in
-  let client_addr = `Ipv4_string "187.73.32.159" in
+  let client_addr = Unix.inet_addr_of_string "187.73.32.159" in
   let helo = "mta98.f1.k8.com.br" in
   let from = "andre@andrenathan.com" in
   match Spf_request.check_from server client_addr helo from with
@@ -27,7 +27,7 @@ let () =
 
 let () =
   let server = Spf_server.create ~debug:false Spf_dns.Dns_cache in
-  let client_addr = `Ipv4_string "189.57.226.93" in
+  let client_addr = Unix.inet_addr_of_string "189.57.226.93" in
   let helo = "gwmail.bradescoseguros.com.br" in
   let _from = "andre@bradescoseguros.com.br" in
   match Spf_request.check_helo server client_addr helo with
