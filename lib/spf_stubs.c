@@ -149,7 +149,9 @@ caml_spf_request_query_mailfrom(value req_val)
     SPF_response_t *resp;
     SPF_result_t result;
 
+    caml_enter_blocking_section();
     SPF_request_query_mailfrom(req, &resp);
+    caml_leave_blocking_section();
 
     ret = caml_alloc(5, 0);
 
