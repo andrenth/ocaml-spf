@@ -1,5 +1,5 @@
 type comments =
-  { explanation : string
+  { explanation  : string
   ; smtp_comment : string
   }
 

@@ -144,20 +144,17 @@ CAMLprim value
 caml_spf_request_query_mailfrom(value req_val)
 {
     CAMLparam1(req_val);
-    CAMLlocal3(resp, cmt, res);
+    CAMLlocal3(ret, cmt, res);
     SPF_request_t *req = (SPF_request_t *)req_val;
-    SPF_response_t *r;
+    SPF_response_t *resp;
     SPF_result_t result;
-    SPF_errcode_t err;
 
-    err = SPF_request_query_mailfrom(req, &r);
-    if (err != 0)
-        spf_request_error(SPF_strerror(err));
+    SPF_request_query_mailfrom(req, &resp);
 
-    resp = caml_alloc(5, 0);
+    ret = caml_alloc(5, 0);
 
-    result = SPF_response_result(r);
-    resp = caml_alloc(1, tag_of_result(result));
+    result = SPF_response_result(resp);
+    res = caml_alloc(1, tag_of_result(result));
 
     switch (result) {
     case SPF_RESULT_FAIL:
@@ -165,28 +162,32 @@ caml_spf_request_query_mailfrom(value req_val)
     case SPF_RESULT_NEUTRAL:
     case SPF_RESULT_NONE:
         cmt = caml_alloc(2, 0);
-        Store_field(cmt, 0, caml_copy_string(SPF_response_get_smtp_comment(r)));
-        Store_field(cmt, 1, caml_copy_string(SPF_response_get_explanation(r)));
+        Store_field(cmt, 0,
+                    caml_copy_string(SPF_response_get_smtp_comment(resp)));
+        Store_field(cmt, 1,
+                    caml_copy_string(SPF_response_get_explanation(resp)));
         res = caml_alloc(1, tag_of_result(result));
         Store_field(res, 0, cmt);
-        Store_field(resp, 0, res);
+        Store_field(ret, 0, res);
         break;
     case SPF_RESULT_INVALID:
     case SPF_RESULT_PASS:
     case SPF_RESULT_TEMPERROR:
     case SPF_RESULT_PERMERROR:
-        Store_field(resp, 0, Val_int(tag_of_result(result)));
+        Store_field(ret, 0, Val_int(tag_of_result(result)));
         break;
     }
 
-    Store_field(resp, 1, Val_int(SPF_response_reason(r)));
-    Store_field(resp, 2, caml_copy_string(SPF_response_get_received_spf(r)));
-    Store_field(resp, 3, caml_copy_string(SPF_response_get_received_spf_value(r)));
-    Store_field(resp, 4, caml_copy_string(SPF_response_get_header_comment(r)));
+    Store_field(ret, 1, Val_int(SPF_response_reason(resp)));
+    Store_field(ret, 2, caml_copy_string(SPF_response_get_received_spf(resp)));
+    Store_field(ret, 3,
+                caml_copy_string(SPF_response_get_received_spf_value(resp)));
+    Store_field(ret, 4,
+                 caml_copy_string(SPF_response_get_header_comment(resp)));
 
-    SPF_response_free(r);
+    SPF_response_free(resp);
 
-    CAMLreturn(resp);
+    CAMLreturn(ret);
 }
 
 CAMLprim value
