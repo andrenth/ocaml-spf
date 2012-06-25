@@ -74,11 +74,11 @@ caml_spf_server_new(value debug_val, value dns_type_val)
 
     dns_type = dns_type_of_val(dns_type_val);
     if (dns_type == -1)
-        caml_invalid_argument("unknown DNS type");
+        spf_error("unknown DNS type");
 
     server = SPF_server_new(dns_type, debug);
     if (server == NULL)
-        caml_failwith("cannot create SPF server");
+        spf_error("cannot create SPF server");
 
     server_val = caml_alloc_custom(&spf_server_ops, sizeof(*server), 0, 1);
     memcpy(Data_custom_val(server_val), server, sizeof(*server));
