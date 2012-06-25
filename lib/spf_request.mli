@@ -4,8 +4,6 @@ exception Spf_request_error of string
 
 val create : Spf_server.t -> t
 
-val free : t -> unit
-
 val check_helo : Spf_server.t
               -> Unix.inet_addr
               -> string

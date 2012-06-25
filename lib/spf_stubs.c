@@ -15,6 +15,7 @@
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
 #include <caml/callback.h>
+#include <caml/custom.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
 #include <caml/signals.h>
@@ -45,6 +46,22 @@ spf_request_error(const char *err)
     caml_raise_with_string(*caml_named_value(exn), err);
 }
 
+static void
+finalize_spf_server(value server_val)
+{
+    SPF_server_t *server = (SPF_server_t *)Data_custom_val(server_val);
+    SPF_server_free(server);
+}
+
+static struct custom_operations spf_server_ops = {
+    "SPF_server_t custom ops",
+    finalize_spf_server,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+};
+
 CAMLprim value
 caml_spf_server_new(value debug_val, value dns_type_val)
 {
@@ -64,39 +81,44 @@ caml_spf_server_new(value debug_val, value dns_type_val)
     if (server == NULL)
         caml_failwith("cannot create SPF server");
 
-    CAMLreturn((value)server);
+    server_val = caml_alloc_custom(&spf_server_ops, sizeof(*server), 0, 1);
+    memcpy(Data_custom_val(server_val), server, sizeof(*server));
+
+    CAMLreturn(server_val);
 }
 
-CAMLprim value
-caml_spf_server_free(value server_val)
+static void
+finalize_spf_request(value req_val)
 {
-    CAMLparam1(server_val);
-    SPF_server_t *server = (SPF_server_t *)server_val;
-    SPF_server_free(server);
-    CAMLreturn(Val_unit);
+    SPF_request_t *req = (SPF_request_t *)Data_custom_val(req_val);
+    SPF_request_free(req);
 }
+
+static struct custom_operations spf_request_ops = {
+    "SPF_request_t custom ops",
+    finalize_spf_request,
+    custom_compare_default,
+    custom_hash_default,
+    custom_serialize_default,
+    custom_deserialize_default
+};
 
 CAMLprim value
 caml_spf_request_new(value server_val)
 {
     CAMLparam1(server_val);
-    SPF_server_t *server = (SPF_server_t *)server_val;
+    CAMLlocal1(req_val);
+    SPF_server_t *server = (SPF_server_t *)Data_custom_val(server_val);
     SPF_request_t *req;
     
     req = SPF_request_new(server);
     if (req == NULL)
         spf_request_error("cannot create SPF request");
 
-    CAMLreturn((value)req);
-}
+    req_val = caml_alloc_custom(&spf_request_ops, sizeof(*req), 0, 1);
+    memcpy(Data_custom_val(req_val), req, sizeof(*req));
 
-CAMLprim value
-caml_spf_request_free(value req_val)
-{
-    CAMLparam1(req_val);
-    SPF_request_t *req = (SPF_request_t *)req_val;
-    SPF_request_free(req);
-    CAMLreturn(Val_unit);
+    CAMLreturn(req_val);
 }
 
 static void
@@ -131,7 +153,7 @@ CAMLprim value
 caml_spf_request_set_inet_addr(value req_val, value addr)
 {
     CAMLparam2(req_val, addr);
-    SPF_request_t *req = (SPF_request_t *)req_val;
+    SPF_request_t *req = (SPF_request_t *)Data_custom_val(req_val);
     struct sockaddr_storage ss;
     socklen_t ss_len;
     SPF_errcode_t e;
@@ -151,19 +173,19 @@ caml_spf_request_set_inet_addr(value req_val, value addr)
     CAMLreturn(Val_unit);
 }
 
-#define SPF_REQUEST_SET_STRING(name)                      \
-CAMLprim value                                            \
-caml_spf_request_set_##name(value req_val, value str_val) \
-{                                                         \
-    CAMLparam2(req_val, str_val);                         \
-    SPF_request_t *req = (SPF_request_t *)req_val;        \
-    const char *str = String_val(str_val);                \
-    SPF_errcode_t err;                                    \
-                                                          \
-    err = SPF_request_set_##name(req, str);               \
-    if (err != SPF_E_SUCCESS)                             \
-        spf_request_error(SPF_strerror(err));             \
-    CAMLreturn(Val_unit);                                 \
+#define SPF_REQUEST_SET_STRING(name)                                \
+CAMLprim value                                                      \
+caml_spf_request_set_##name(value req_val, value str_val)           \
+{                                                                   \
+    CAMLparam2(req_val, str_val);                                   \
+    SPF_request_t *req = (SPF_request_t *)Data_custom_val(req_val); \
+    const char *str = String_val(str_val);                          \
+    SPF_errcode_t err;                                              \
+                                                                    \
+    err = SPF_request_set_##name(req, str);                         \
+    if (err != SPF_E_SUCCESS)                                       \
+        spf_request_error(SPF_strerror(err));                       \
+    CAMLreturn(Val_unit);                                           \
 }
 
 SPF_REQUEST_SET_STRING(ipv4_str);
@@ -203,7 +225,7 @@ caml_spf_request_query_mailfrom(value req_val)
 {
     CAMLparam1(req_val);
     CAMLlocal3(ret, cmt, res);
-    SPF_request_t *req = (SPF_request_t *)req_val;
+    SPF_request_t *req = (SPF_request_t *)Data_custom_val(req_val);
     SPF_response_t *resp;
     SPF_result_t result;
 
