@@ -22,7 +22,7 @@ type result
   | Pass
   | Fail of comments
   | Softfail of comments
-  | None of comments
+  | None
   | Temperror
   | Permerror
 

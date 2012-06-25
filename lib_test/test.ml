@@ -18,8 +18,7 @@ let () =
       match Spf.result r with
       | Spf.Neutral c
       | Spf.Fail c
-      | Spf.Softfail c
-      | Spf.None c ->
+      | Spf.Softfail c ->
           printf "\t\t%s\n\t\t%s\n%!"
             (Spf.explanation c)
             (Spf.smtp_comment c)
@@ -43,8 +42,7 @@ let () =
       match Spf.result r with
       | Spf.Neutral c
       | Spf.Fail c
-      | Spf.Softfail c
-      | Spf.None c ->
+      | Spf.Softfail c ->
           printf "\t\t%s\n\t\t%s\n%!"
             (Spf.explanation c)
             (Spf.smtp_comment c)

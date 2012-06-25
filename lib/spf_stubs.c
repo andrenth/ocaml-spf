@@ -207,11 +207,11 @@ tag_of_result(SPF_result_t r)
     case SPF_RESULT_SOFTFAIL:
         return 2;
     case SPF_RESULT_NONE:
-        return 3;
-    case SPF_RESULT_TEMPERROR:
         return 2;
-    case SPF_RESULT_PERMERROR:
+    case SPF_RESULT_TEMPERROR:
         return 3;
+    case SPF_RESULT_PERMERROR:
+        return 4;
     default:
         spf_error("unexpected result");
         /* NOTREACHED */
@@ -241,7 +241,6 @@ caml_spf_request_query_mailfrom(value req_val)
     case SPF_RESULT_FAIL:
     case SPF_RESULT_SOFTFAIL:
     case SPF_RESULT_NEUTRAL:
-    case SPF_RESULT_NONE:
         cmt = caml_alloc(2, 0);
         Store_field(cmt, 0,
                     caml_copy_string(SPF_response_get_smtp_comment(resp)));
@@ -255,6 +254,7 @@ caml_spf_request_query_mailfrom(value req_val)
     case SPF_RESULT_PASS:
     case SPF_RESULT_TEMPERROR:
     case SPF_RESULT_PERMERROR:
+    case SPF_RESULT_NONE:
         Store_field(ret, 0, Val_int(tag_of_result(result)));
         break;
     }
