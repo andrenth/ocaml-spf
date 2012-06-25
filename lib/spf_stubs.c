@@ -40,10 +40,9 @@ dns_type_of_val(value v)
 }
 
 static void
-spf_request_error(const char *err)
+spf_error(const char *err)
 {
-    const char *exn = "Spf_request.Spf_request_error";
-    caml_raise_with_string(*caml_named_value(exn), err);
+    caml_raise_with_string(*caml_named_value("Spf.Spf_error"), err);
 }
 
 static void
@@ -113,7 +112,7 @@ caml_spf_request_new(value server_val)
     
     req = SPF_request_new(server);
     if (req == NULL)
-        spf_request_error("cannot create SPF request");
+        spf_error("cannot create SPF request");
 
     req_val = caml_alloc_custom(&spf_request_ops, sizeof(*req), 0, 1);
     memcpy(Data_custom_val(req_val), req, sizeof(*req));
@@ -145,7 +144,7 @@ spf_get_sockaddr(value addr_val, struct sockaddr_storage *ss,
         break;
     }
     default:
-        spf_request_error("unsupported address type");
+        spf_error("unsupported address type");
     }
 }
 
@@ -168,7 +167,7 @@ caml_spf_request_set_inet_addr(value req_val, value addr)
         break;
     }
     if (e != SPF_E_SUCCESS)
-        spf_request_error(SPF_strerror(e));
+        spf_error(SPF_strerror(e));
 
     CAMLreturn(Val_unit);
 }
@@ -184,7 +183,7 @@ caml_spf_request_set_##name(value req_val, value str_val)           \
                                                                     \
     err = SPF_request_set_##name(req, str);                         \
     if (err != SPF_E_SUCCESS)                                       \
-        spf_request_error(SPF_strerror(err));                       \
+        spf_error(SPF_strerror(err));                               \
     CAMLreturn(Val_unit);                                           \
 }
 
@@ -214,7 +213,7 @@ tag_of_result(SPF_result_t r)
     case SPF_RESULT_PERMERROR:
         return 3;
     default:
-        spf_request_error("unexpected result");
+        spf_error("unexpected result");
         /* NOTREACHED */
         return -1;
     }

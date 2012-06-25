@@ -9,9 +9,8 @@ Library spf
   Path:            lib
   BuildTools:      ocamlbuild
   CompiledObject:  best
-  Modules:         Spf_dns, Spf_request, Spf_response, Spf_server
+  Modules:         Spf
   CSources:        spf_stubs.c
-  InternalModules: Option
   CCLib:           -lspf2
   CCOpt:           -Wall -Werror
 
