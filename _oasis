@@ -14,6 +14,14 @@ Library spf
   CCLib:           -lspf2
   CCOpt:           -Wall -Werror
 
+Executable "postfix-policyd-spf-ocaml"
+  Path:            src
+  BuildTools:      ocamlbuild
+  MainIs:          policyd.ml
+  Install:         true
+  CompiledObject:  best
+  BuildDepends:    spf, str, unix, uint.uint32, uint.uint128
+
 Executable spf_test
   Path:            lib_test
   BuildTools:      ocamlbuild
