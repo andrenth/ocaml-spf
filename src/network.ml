@@ -21,7 +21,7 @@ let ipv4_of_string s =
   let ip = ref Uint32.zero in
   for i = 0 to 3 do
     let b = Uint32.of_int (int_of_char s.[i]) in
-    ip := Uint32.logor !ip (Uint32.shift_left b (4 - i - 1))
+    ip := Uint32.logor !ip (Uint32.shift_left b (32 - (i + 1) * 8))
   done;
   !ip
 
@@ -29,7 +29,7 @@ let ipv6_of_string s =
   let ip = ref Uint128.zero in
   for i = 0 to 16 do
     let b = Uint128.of_int (int_of_char s.[i]) in
-    ip := Uint128.logor !ip (Uint128.shift_left b (4 - i - 1))
+    ip := Uint128.logor !ip (Uint128.shift_left b (128 - (i + 1) * 8))
   done;
   !ip
 
