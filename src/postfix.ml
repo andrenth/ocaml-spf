@@ -7,6 +7,11 @@ type attrs =
   ; sender         : string
   }
 
+let instance attrs = attrs.instance
+let client_address attrs = attrs.client_address
+let helo_name attrs = attrs.helo_name
+let sender attrs = attrs.sender
+
 module AttrMap = Map.Make(struct
   type t = string
   let compare = compare

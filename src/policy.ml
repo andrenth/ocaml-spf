@@ -40,7 +40,7 @@ let localhost_addresses =
     ["127.0.0.1"; "::1"]
 
 let exempt_localhost server attrs cache =
-  let addr = attrs.Postfix.client_address in
+  let addr = Postfix.client_address attrs in
   if addr <> "" && List.mem (Unix.inet_addr_of_string addr) localhost_addresses
   then
     return (Prepend "X-Comment: SPF not applicable to localhost connection")
@@ -51,7 +51,7 @@ let relay_addresses =
   [ "187.73.32.128/25" ]
  
 let exempt_relay server attrs cache =
-  let addr = attrs.Postfix.client_address in
+  let addr = Postfix.client_address attrs in
   if addr <> "" then
     let client_addr = Unix.inet_addr_of_string addr in
     let rec exempt = function
@@ -153,9 +153,9 @@ let process_from spf_server client_addr helo_name sender cache =
   return (handle_from_response cache)
 
 let sender_policy_framework spf_server attrs cache =
-  let client_addr = attrs.Postfix.client_address in
-  let helo_name = attrs.Postfix.helo_name in
-  let sender = attrs.Postfix.sender in
+  let client_addr = Postfix.client_address attrs in
+  let helo_name = Postfix.helo_name attrs in
+  let sender = Postfix.sender attrs in
   let addr = Unix.inet_addr_of_string client_addr in
   match_lwt process_helo spf_server addr helo_name sender cache with
   | Dunno -> process_from spf_server addr helo_name sender cache
@@ -193,7 +193,7 @@ let handle spf_server attrs cache handler =
   handler spf_server attrs cache
 
 let handle_attrs spf_server attrs =
-  let cache = get_cache attrs.Postfix.instance in
+  let cache = get_cache (Postfix.instance attrs) in
   let not_default = ((<>) default_response) in
   lwt response =
     until not_default
