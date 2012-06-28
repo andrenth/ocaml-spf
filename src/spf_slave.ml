@@ -28,42 +28,15 @@ let handle_sigterm _ =
   Lwt_main.run (log_t >> cleanup_t);
   exit 0
 
-module B = Release_buffer
-
-let read_postfix_attrs fd =
-  let siz = 1024 in
-  let buf = Release_buffer.create siz in
-  let rec read offset remain =
-    match_lwt Release_io.read_once fd buf offset remain with
-    | 0 ->
-        lwt () = Lwt_log.error "got eof on socket, closing" in
-        lwt () = Lwt_unix.close fd in
-        return None
-    | k ->
-        let len = B.length buf in
-        if B.get buf (len - 2) = '\n' && B.get buf (len - 1) = '\n' then
-          return (Some buf)
-        else
-          read (offset + k) (remain - k) in
-  lwt res = read 0 siz in
-  return res
-
-let parse_postfix_attrs fd =
-  match_lwt read_postfix_attrs fd with
-  | None ->
-      return None
-  | Some buf ->
-      let lines = Str.split (Str.regexp "\n") (B.to_string buf) in
-      return (Postfix.parse_lines lines)
-
 let spf_handler fd =
   let spf_server = Spf.server Spf.Dns_cache in
-  match_lwt parse_postfix_attrs fd with
+  match_lwt Postfix.parse_attrs fd with
   | None ->
       return ()
   | Some attrs ->
       lwt action = Policy.handle_attrs spf_server attrs in
-      Release_io.write fd (B.of_string (sprintf "action=%s\n\n" action))
+      let reply = sprintf "action=%s\n\n" action in
+      Release_io.write fd (Release_buffer.of_string reply)
 
 let main fd =
   ignore (Lwt_unix.on_signal Sys.sigterm handle_sigterm);

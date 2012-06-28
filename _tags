@@ -52,5 +52,6 @@
 <*/*.ml>: annot
 <*/*.ml>: warn_error
 <src/policy.ml>: syntax_camlp4o
+<src/postfix.ml>: syntax_camlp4o
 <src/spfd.ml>: syntax_camlp4o
 <src/spf_slave.ml>: syntax_camlp4o

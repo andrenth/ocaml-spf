@@ -1,3 +1,4 @@
+open Lwt
 open Printf
 
 type attrs =
@@ -59,3 +60,31 @@ let parse_lines lines =
     AttrMap.empty
     lines in
   attrs_of_map map
+
+module B = Release_buffer
+
+let read_attrs fd =
+  let siz = 1024 in
+  let buf = B.create siz in
+  let rec read offset remain =
+    match_lwt Release_io.read_once fd buf offset remain with
+    | 0 ->
+        lwt () = Lwt_log.error "got eof on socket, closing" in
+        lwt () = Lwt_unix.close fd in
+        return None
+    | k ->
+        let len = B.length buf in
+        if B.get buf (len - 2) = '\n' && B.get buf (len - 1) = '\n' then
+          return (Some buf)
+        else
+          read (offset + k) (remain - k) in
+  lwt res = read 0 siz in
+  return res
+
+let parse_attrs fd =
+  match_lwt read_attrs fd with
+  | None ->
+      return None
+  | Some buf ->
+      let lines = Str.split (Str.regexp "\n") (B.to_string buf) in
+      return (parse_lines lines)
