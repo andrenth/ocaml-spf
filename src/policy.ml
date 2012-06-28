@@ -189,15 +189,12 @@ let get_cache instance =
         cache
       end
 
-let handle spf_server attrs cache handler =
-  handler spf_server attrs cache
-
 let handle_attrs spf_server attrs =
   let cache = get_cache (Postfix.instance attrs) in
   let not_default = ((<>) default_response) in
   lwt response =
     until not_default
-      (handle spf_server attrs cache)
+      (fun handler -> handler spf_server attrs cache)
       default_response
       handlers in
   return (string_of_response response)
