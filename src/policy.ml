@@ -34,38 +34,32 @@ let string_of_response = function
 let results_cache = ref None
 let default_response = Dunno
 
-let localhost_addresses =
-  List.map
-    (Unix.inet_addr_of_string)
-    ["127.0.0.1"; "::1"]
-
-let exempt_localhost server attrs cache =
-  let addr = Postfix.client_address attrs in
-  if addr <> "" && List.mem (Unix.inet_addr_of_string addr) localhost_addresses
-  then
-    return (Prepend "X-Comment: SPF not applicable to localhost connection")
-  else
-    return Dunno
-
-let relay_addresses =
-  [ "187.73.32.128/25" ]
- 
-let exempt_relay server attrs cache =
+let exempt_networks networks msg server attrs cache =
   let addr = Postfix.client_address attrs in
   if addr <> "" then
     let client_addr = Unix.inet_addr_of_string addr in
     let rec exempt = function
       | [] ->
           Dunno
-      | relay::rest ->
-          let net = Network.of_string relay in
+      | net::rest ->
+          let net = Network.of_string net in
           if Network.includes client_addr net then
-            Prepend "X-Comment: SPF skipped for whitelisted relay"
+            Prepend msg
           else
             exempt rest in
-    return (exempt relay_addresses)
+    return (exempt networks)
   else
     return Dunno
+
+let exempt_localhost =
+  exempt_networks
+    [ "127.0.0.0/8"; "::ffff:127.0.0.0/104" ]
+    "SPF not applicable to localhost connection - skipped check"
+
+let exempt_relay =
+  exempt_networks
+    [ "187.73.32.128/25" ]
+    "X-Comment: SPF skipped for whitelisted relay"
 
 let unbox_spf_response = function
   | `Error e -> failwith (sprintf "error: %s" e)
