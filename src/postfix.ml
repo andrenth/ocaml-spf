@@ -38,12 +38,6 @@ let attrs_of_map m =
   with Not_found ->
     None
 
-let attr k attrs =
-  try
-    Some (AttrMap.find k attrs)
-  with Not_found ->
-    None
-
 let parse_line line =
   let re = Str.regexp "^\\([^=]+\\)=\\(.*\\)$" in
   if Str.string_match re line 0 then
