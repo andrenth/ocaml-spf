@@ -1,3 +1,4 @@
+open Lwt
 open Printf
 
 type response
@@ -14,7 +15,7 @@ type cache =
   ; mutable timestamp        : float
   }
 
-type handler = string * (Postfix.attrs -> cache -> response)
+type handler = (Postfix.attrs -> cache -> response Lwt.t)
 
 let new_cache_entry instance =
   { instance         = instance
@@ -42,13 +43,12 @@ let exempt_localhost attrs cache =
   let addr = attrs.Postfix.client_address in
   if addr <> "" && List.mem (Unix.inet_addr_of_string addr) localhost_addresses
   then
-    Prepend "X-Comment: SPF not applicable to localhost connection"
+    return (Prepend "X-Comment: SPF not applicable to localhost connection")
   else
-    Dunno
+    return Dunno
 
 let relay_addresses =
-  [ "187.73.32.128/25"
-  ]
+  [ "187.73.32.128/25" ]
  
 let exempt_relay attrs cache =
   let addr = attrs.Postfix.client_address in
@@ -63,9 +63,9 @@ let exempt_relay attrs cache =
             Prepend "X-Comment: SPF skipped for whitelisted relay"
           else
             exempt rest in
-    exempt relay_addresses
+    return (exempt relay_addresses)
   else
-    Dunno
+    return Dunno
 
 let spf_server = Spf.server Spf.Dns_cache
 
@@ -128,41 +128,53 @@ let handle_from_response cache =
       end else
         Dunno
 
+let check_helo server addr helo =
+  Lwt_preemptive.detach (fun () -> Spf.check_helo server addr helo) ()
+
 let process_helo client_addr helo_name sender cache =
-  (if cache.helo_response = None then
-    let res = Spf.check_helo spf_server client_addr helo_name in
-    let res = unbox_spf_response res in
-    cache.helo_response <- Some res);
-  handle_helo_response sender cache
+  lwt () = if cache.helo_response = None then begin
+    lwt res = check_helo spf_server client_addr helo_name in
+    let res' = unbox_spf_response res in
+    cache.helo_response <- Some res';
+    return ()
+  end else
+    return () in
+  return (handle_helo_response sender cache)
+
+let check_from server addr helo sender =
+  Lwt_preemptive.detach (fun () -> Spf.check_from server addr helo sender) ()
 
 let process_from client_addr helo_name sender cache =
-  (if cache.from_response = None then
-    let res = Spf.check_from spf_server client_addr helo_name sender in
+  lwt () = if cache.from_response = None then begin
+    lwt res = check_from spf_server client_addr helo_name sender in
     let res = unbox_spf_response res in
-    cache.from_response <- Some res);
-  handle_from_response cache
+    cache.from_response <- Some res;
+    return ()
+  end else
+    return () in
+  return (handle_from_response cache)
 
 let sender_policy_framework attrs cache =
   let client_addr = attrs.Postfix.client_address in
   let helo_name = attrs.Postfix.helo_name in
   let sender = attrs.Postfix.sender in
   let addr = Unix.inet_addr_of_string client_addr in
-  match process_helo addr helo_name sender cache with
+  match_lwt process_helo addr helo_name sender cache with
   | Dunno -> process_from addr helo_name sender cache
-  | other -> other
+  | other -> return other
 
 let handlers =
-  [ "exempt_localhost",        exempt_localhost
-  ; "exempt_relay",            exempt_relay
-  ; "sender_policy_framework", sender_policy_framework
+  [ exempt_localhost
+  ; exempt_relay
+  ; sender_policy_framework
   ]
 
 let rec until p f z = function
   | [] ->
-      z
+      return z
   | h::t ->
-      let x = f h in
-      if p x then x else until p f z t
+      lwt x = f h in
+      if p x then return x else until p f z t
 
 let get_cache instance =
   match !results_cache with
@@ -179,15 +191,15 @@ let get_cache instance =
         cache
       end
 
-let handle attrs cache (name, handler) =
+let handle attrs cache handler =
   handler attrs cache
 
 let handle_attrs attrs =
   let cache = get_cache attrs.Postfix.instance in
   let not_default = ((<>) default_response) in
-  let response =
+  lwt response =
     until not_default (handle attrs cache) default_response handlers in
-  string_of_response response
+  return (string_of_response response)
 
 let lookup_timeout =
   string_of_response (Defer_if_permit "SPF-Result=Timeout handling SPF lookup")

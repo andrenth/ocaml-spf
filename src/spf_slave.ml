@@ -63,8 +63,8 @@ let spf_handler fd =
   | None ->
       return ()
   | Some attrs ->
-      let action = sprintf "action=%s\n\n" (Policy.handle_attrs attrs) in 
-      Release_io.write fd (B.of_string action)
+      lwt action = Policy.handle_attrs attrs in
+      Release_io.write fd (B.of_string (sprintf "action=%s\n\n" action))
 
 let main fd =
   ignore (Lwt_unix.on_signal Sys.sigterm handle_sigterm);

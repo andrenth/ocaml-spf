@@ -39,6 +39,7 @@ let () =
         (Spf.received_spf r)
         (Spf.received_spf_value r)
         (Spf.header_comment r);
+      printf ">>>\n%!";
       match Spf.result r with
       | Spf.Neutral c
       | Spf.Fail c

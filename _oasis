@@ -39,12 +39,14 @@ Executable "spf-slave"
   BuildDepends:    spf,
                    str,
                    unix,
+                   threads,
                    uint.uint32,
                    uint.uint128,
                    release,
                    lwt,
                    lwt.unix,
-                   lwt.syntax
+                   lwt.syntax,
+                   lwt.preemptive
 
 Executable spf_test
   Path:            lib_test
