@@ -60,23 +60,3 @@ let parse_lines lines =
     AttrMap.empty
     lines in
   attrs_of_map map
-
-let with_attrs f =
-  let attrs = ref AttrMap.empty in
-  try
-    while true do
-      let line = input_line stdin in
-      match parse_line line with
-      | `Parsed (k, v) ->
-          if needs_attr k then
-            attrs := AttrMap.add k v !attrs
-      | `Finished ->
-          (match attrs_of_map !attrs with
-          | None -> ()
-          | Some a -> f a);
-          attrs := AttrMap.empty
-      | `Error ->
-          ()
-    done;
-  with End_of_file ->
-    failwith "eof"
