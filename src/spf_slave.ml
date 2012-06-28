@@ -56,14 +56,13 @@ let parse_postfix_attrs fd =
       let lines = Str.split (Str.regexp "\n") (B.to_string buf) in
       return (Postfix.parse_lines lines)
 
-let spf_server = Spf.server Spf.Dns_cache
-
 let spf_handler fd =
+  let spf_server = Spf.server Spf.Dns_cache in
   match_lwt parse_postfix_attrs fd with
   | None ->
       return ()
   | Some attrs ->
-      lwt action = Policy.handle_attrs attrs in
+      lwt action = Policy.handle_attrs spf_server attrs in
       Release_io.write fd (B.of_string (sprintf "action=%s\n\n" action))
 
 let main fd =

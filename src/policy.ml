@@ -15,7 +15,7 @@ type cache =
   ; mutable timestamp        : float
   }
 
-type handler = (Postfix.attrs -> cache -> response Lwt.t)
+type handler = (Spf.server -> Postfix.attrs -> cache -> response Lwt.t)
 
 let new_cache_entry instance =
   { instance         = instance
@@ -39,7 +39,7 @@ let localhost_addresses =
     (Unix.inet_addr_of_string)
     ["127.0.0.1"; "::1"]
 
-let exempt_localhost attrs cache =
+let exempt_localhost server attrs cache =
   let addr = attrs.Postfix.client_address in
   if addr <> "" && List.mem (Unix.inet_addr_of_string addr) localhost_addresses
   then
@@ -50,7 +50,7 @@ let exempt_localhost attrs cache =
 let relay_addresses =
   [ "187.73.32.128/25" ]
  
-let exempt_relay attrs cache =
+let exempt_relay server attrs cache =
   let addr = attrs.Postfix.client_address in
   if addr <> "" then
     let client_addr = Unix.inet_addr_of_string addr in
@@ -66,8 +66,6 @@ let exempt_relay attrs cache =
     return (exempt relay_addresses)
   else
     return Dunno
-
-let spf_server = Spf.server Spf.Dns_cache
 
 let unbox_spf_response = function
   | `Error e -> failwith (sprintf "error: %s" e)
@@ -131,7 +129,7 @@ let handle_from_response cache =
 let check_helo server addr helo =
   Lwt_preemptive.detach (fun () -> Spf.check_helo server addr helo) ()
 
-let process_helo client_addr helo_name sender cache =
+let process_helo spf_server client_addr helo_name sender cache =
   lwt () = if cache.helo_response = None then begin
     lwt res = check_helo spf_server client_addr helo_name in
     let res' = unbox_spf_response res in
@@ -144,7 +142,7 @@ let process_helo client_addr helo_name sender cache =
 let check_from server addr helo sender =
   Lwt_preemptive.detach (fun () -> Spf.check_from server addr helo sender) ()
 
-let process_from client_addr helo_name sender cache =
+let process_from spf_server client_addr helo_name sender cache =
   lwt () = if cache.from_response = None then begin
     lwt res = check_from spf_server client_addr helo_name sender in
     let res = unbox_spf_response res in
@@ -154,13 +152,13 @@ let process_from client_addr helo_name sender cache =
     return () in
   return (handle_from_response cache)
 
-let sender_policy_framework attrs cache =
+let sender_policy_framework spf_server attrs cache =
   let client_addr = attrs.Postfix.client_address in
   let helo_name = attrs.Postfix.helo_name in
   let sender = attrs.Postfix.sender in
   let addr = Unix.inet_addr_of_string client_addr in
-  match_lwt process_helo addr helo_name sender cache with
-  | Dunno -> process_from addr helo_name sender cache
+  match_lwt process_helo spf_server addr helo_name sender cache with
+  | Dunno -> process_from spf_server addr helo_name sender cache
   | other -> return other
 
 let handlers =
@@ -191,14 +189,17 @@ let get_cache instance =
         cache
       end
 
-let handle attrs cache handler =
-  handler attrs cache
+let handle spf_server attrs cache handler =
+  handler spf_server attrs cache
 
-let handle_attrs attrs =
+let handle_attrs spf_server attrs =
   let cache = get_cache attrs.Postfix.instance in
   let not_default = ((<>) default_response) in
   lwt response =
-    until not_default (handle attrs cache) default_response handlers in
+    until not_default
+      (handle spf_server attrs cache)
+      default_response
+      handlers in
   return (string_of_response response)
 
 let lookup_timeout =
