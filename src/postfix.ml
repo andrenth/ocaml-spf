@@ -14,6 +14,9 @@ end)
 
 type attr_map = string AttrMap.t
 
+let new_attr_map = AttrMap.empty
+let add_addr = AttrMap.add
+
 let needs_attr = function
   | "instance" | "client_address" | "helo_name" | "sender" -> true
   | _ -> false
@@ -46,6 +49,17 @@ let parse_line line =
     `Finished
   else
     `Error
+
+let parse_lines lines =
+  let map = List.fold_left
+    (fun map line ->
+      match parse_line line with
+      | `Error -> map
+      | `Finished -> map
+      | `Parsed (k, v) -> if needs_attr k then AttrMap.add k v map else map)
+    AttrMap.empty
+    lines in
+  attrs_of_map map
 
 let with_attrs f =
   let attrs = ref AttrMap.empty in

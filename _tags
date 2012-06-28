@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 9c85301202a40310cc058c4149f0ec73)
+# DO NOT EDIT (digest: 49dee584e93d7b1c34bc9adcf227f405)
 # Library spf
 "lib": include
 <lib/*.ml{,i}>: oasis_library_spf_ccopt
@@ -10,6 +10,16 @@
 "lib/libspf.a": oasis_library_spf_cclib
 "lib/dllspf.so": oasis_library_spf_cclib
 <lib/spf.{cma,cmxa}>: use_libspf
+# Executable spf-slave
+<src/spf_slave.{native,byte}>: use_spf
+<src/spf_slave.{native,byte}>: pkg_unix
+<src/spf_slave.{native,byte}>: pkg_uint.uint32
+<src/spf_slave.{native,byte}>: pkg_uint.uint128
+<src/spf_slave.{native,byte}>: pkg_str
+<src/spf_slave.{native,byte}>: pkg_release
+<src/spf_slave.{native,byte}>: pkg_lwt.unix
+<src/spf_slave.{native,byte}>: pkg_lwt.syntax
+<src/spf_slave.{native,byte}>: pkg_lwt
 # Executable spf_test
 <lib_test/test.{native,byte}>: use_spf
 <lib_test/test.{native,byte}>: pkg_unix
@@ -21,10 +31,27 @@
 <src/policyd.{native,byte}>: pkg_uint.uint32
 <src/policyd.{native,byte}>: pkg_uint.uint128
 <src/policyd.{native,byte}>: pkg_str
+# Executable spfd
+<src/spfd.{native,byte}>: use_spf
+<src/spfd.{native,byte}>: pkg_unix
+<src/spfd.{native,byte}>: pkg_uint.uint32
+<src/spfd.{native,byte}>: pkg_uint.uint128
+<src/spfd.{native,byte}>: pkg_str
+<src/spfd.{native,byte}>: pkg_release
+<src/spfd.{native,byte}>: pkg_lwt.unix
+<src/spfd.{native,byte}>: pkg_lwt.syntax
+<src/spfd.{native,byte}>: pkg_lwt
 <src/*.ml{,i}>: use_spf
 <src/*.ml{,i}>: pkg_unix
 <src/*.ml{,i}>: pkg_uint.uint32
 <src/*.ml{,i}>: pkg_uint.uint128
 <src/*.ml{,i}>: pkg_str
+<src/*.ml{,i}>: pkg_release
+<src/*.ml{,i}>: pkg_lwt.unix
+<src/*.ml{,i}>: pkg_lwt.syntax
+<src/*.ml{,i}>: pkg_lwt
 # OASIS_STOP
 <*/*.ml>: annot
+<*/*.ml>: warn_error
+<src/spfd.ml>: syntax_camlp4o
+<src/spf_slave.ml>: syntax_camlp4o
