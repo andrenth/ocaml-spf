@@ -20,20 +20,16 @@ Executable "spfd"
   MainIs:          spfd.ml
   Install:         true
   CompiledObject:  best
-  BuildDepends:    spf,
-                   str,
-                   unix,
-                   uint.uint32,
-                   uint.uint128,
+  BuildDepends:    str,
                    release,
                    lwt,
                    lwt.unix,
                    lwt.syntax
 
-Executable "spf-slave"
+Executable "spf-policyd"
   Path:            src
   BuildTools:      ocamlbuild
-  MainIs:          spf_slave.ml
+  MainIs:          spf_policyd.ml
   Install:         true
   CompiledObject:  best
   BuildDepends:    spf,

@@ -1,57 +1,67 @@
 # OASIS_START
-# DO NOT EDIT (digest: 2ef7a905deefe83c079671bf685681cc)
+# DO NOT EDIT (digest: 4bfbfbb0d597bf96fbdcddfb5903bd5c)
+# Ignore VCS directories, you can use the same kind of rule outside 
+# OASIS_START/STOP if you want to exclude directories that contains 
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
 # Library spf
-"lib": include
+"lib/spf.cmxs": use_spf
 <lib/*.ml{,i}>: oasis_library_spf_ccopt
 "lib/spf_stubs.c": oasis_library_spf_ccopt
 <lib/spf.{cma,cmxa}>: oasis_library_spf_cclib
-"lib/libspf.lib": oasis_library_spf_cclib
-"lib/dllspf.dll": oasis_library_spf_cclib
-"lib/libspf.a": oasis_library_spf_cclib
-"lib/dllspf.so": oasis_library_spf_cclib
-<lib/spf.{cma,cmxa}>: use_libspf
-# Executable spf-slave
-<src/spf_slave.{native,byte}>: use_spf
-<src/spf_slave.{native,byte}>: pkg_unix
-<src/spf_slave.{native,byte}>: pkg_uint.uint32
-<src/spf_slave.{native,byte}>: pkg_uint.uint128
-<src/spf_slave.{native,byte}>: pkg_threads
-<src/spf_slave.{native,byte}>: pkg_str
-<src/spf_slave.{native,byte}>: pkg_release
-<src/spf_slave.{native,byte}>: pkg_lwt.unix
-<src/spf_slave.{native,byte}>: pkg_lwt.syntax
-<src/spf_slave.{native,byte}>: pkg_lwt.preemptive
-<src/spf_slave.{native,byte}>: pkg_lwt
+"lib/libspf_stubs.lib": oasis_library_spf_cclib
+"lib/dllspf_stubs.dll": oasis_library_spf_cclib
+"lib/libspf_stubs.a": oasis_library_spf_cclib
+"lib/dllspf_stubs.so": oasis_library_spf_cclib
+<lib/spf.{cma,cmxa}>: use_libspf_stubs
+# Executable spfd
+<src/spfd.{native,byte}>: pkg_str
+<src/spfd.{native,byte}>: pkg_release
+<src/spfd.{native,byte}>: pkg_lwt
+<src/spfd.{native,byte}>: pkg_lwt.unix
+<src/spfd.{native,byte}>: pkg_lwt.syntax
+# Executable spf-policyd
+<src/spf_policyd.{native,byte}>: use_spf
+<src/spf_policyd.{native,byte}>: pkg_unix
+<src/spf_policyd.{native,byte}>: pkg_str
+<src/spf_policyd.{native,byte}>: pkg_threads
+<src/spf_policyd.{native,byte}>: pkg_uint.uint32
+<src/spf_policyd.{native,byte}>: pkg_uint.uint128
+<src/spf_policyd.{native,byte}>: pkg_release
+<src/spf_policyd.{native,byte}>: pkg_lwt
+<src/spf_policyd.{native,byte}>: pkg_lwt.unix
+<src/spf_policyd.{native,byte}>: pkg_lwt.syntax
+<src/spf_policyd.{native,byte}>: pkg_lwt.preemptive
+<src/*.ml{,i}>: use_spf
+<src/*.ml{,i}>: pkg_unix
+<src/*.ml{,i}>: pkg_str
 <src/*.ml{,i}>: pkg_threads
+<src/*.ml{,i}>: pkg_uint.uint32
+<src/*.ml{,i}>: pkg_uint.uint128
+<src/*.ml{,i}>: pkg_release
+<src/*.ml{,i}>: pkg_lwt
+<src/*.ml{,i}>: pkg_lwt.unix
+<src/*.ml{,i}>: pkg_lwt.syntax
 <src/*.ml{,i}>: pkg_lwt.preemptive
 # Executable spf_test
 <lib_test/test.{native,byte}>: use_spf
 <lib_test/test.{native,byte}>: pkg_unix
 <lib_test/*.ml{,i}>: use_spf
 <lib_test/*.ml{,i}>: pkg_unix
-# Executable spfd
-<src/spfd.{native,byte}>: use_spf
-<src/spfd.{native,byte}>: pkg_unix
-<src/spfd.{native,byte}>: pkg_uint.uint32
-<src/spfd.{native,byte}>: pkg_uint.uint128
-<src/spfd.{native,byte}>: pkg_str
-<src/spfd.{native,byte}>: pkg_release
-<src/spfd.{native,byte}>: pkg_lwt.unix
-<src/spfd.{native,byte}>: pkg_lwt.syntax
-<src/spfd.{native,byte}>: pkg_lwt
-<src/*.ml{,i}>: use_spf
-<src/*.ml{,i}>: pkg_unix
-<src/*.ml{,i}>: pkg_uint.uint32
-<src/*.ml{,i}>: pkg_uint.uint128
-<src/*.ml{,i}>: pkg_str
-<src/*.ml{,i}>: pkg_release
-<src/*.ml{,i}>: pkg_lwt.unix
-<src/*.ml{,i}>: pkg_lwt.syntax
-<src/*.ml{,i}>: pkg_lwt
 # OASIS_STOP
 <*/*.ml>: annot
 <*/*.ml>: warn_error
 <src/policy.ml>: syntax_camlp4o
 <src/postfix.ml>: syntax_camlp4o
 <src/spfd.ml>: syntax_camlp4o
-<src/spf_slave.ml>: syntax_camlp4o
+<src/spf_policyd.ml>: syntax_camlp4o
+<src/spf_milter.ml>: syntax_camlp4o
