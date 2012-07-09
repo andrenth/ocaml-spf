@@ -44,6 +44,25 @@ Executable "spf-policyd"
                    lwt.syntax,
                    lwt.preemptive
 
+Executable "spf-milter"
+  Path:            src
+  BuildTools:      ocamlbuild
+  MainIs:          spf_milter.ml
+  Install:         true
+  CompiledObject:  best
+  BuildDepends:    spf,
+                   milter,
+                   str,
+                   unix,
+                   threads,
+                   uint.uint32,
+                   uint.uint128,
+                   release,
+                   lwt,
+                   lwt.unix,
+                   lwt.syntax,
+                   lwt.preemptive
+
 Executable spf_test
   Path:            lib_test
   BuildTools:      ocamlbuild

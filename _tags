@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 4bfbfbb0d597bf96fbdcddfb5903bd5c)
+# DO NOT EDIT (digest: e048003be779e46cc3cbda2b41f971e1)
 # Ignore VCS directories, you can use the same kind of rule outside 
 # OASIS_START/STOP if you want to exclude directories that contains 
 # useless stuff for the build process
@@ -41,8 +41,22 @@
 <src/spf_policyd.{native,byte}>: pkg_lwt.unix
 <src/spf_policyd.{native,byte}>: pkg_lwt.syntax
 <src/spf_policyd.{native,byte}>: pkg_lwt.preemptive
+# Executable spf-milter
+<src/spf_milter.{native,byte}>: use_spf
+<src/spf_milter.{native,byte}>: pkg_unix
+<src/spf_milter.{native,byte}>: pkg_milter
+<src/spf_milter.{native,byte}>: pkg_str
+<src/spf_milter.{native,byte}>: pkg_threads
+<src/spf_milter.{native,byte}>: pkg_uint.uint32
+<src/spf_milter.{native,byte}>: pkg_uint.uint128
+<src/spf_milter.{native,byte}>: pkg_release
+<src/spf_milter.{native,byte}>: pkg_lwt
+<src/spf_milter.{native,byte}>: pkg_lwt.unix
+<src/spf_milter.{native,byte}>: pkg_lwt.syntax
+<src/spf_milter.{native,byte}>: pkg_lwt.preemptive
 <src/*.ml{,i}>: use_spf
 <src/*.ml{,i}>: pkg_unix
+<src/*.ml{,i}>: pkg_milter
 <src/*.ml{,i}>: pkg_str
 <src/*.ml{,i}>: pkg_threads
 <src/*.ml{,i}>: pkg_uint.uint32

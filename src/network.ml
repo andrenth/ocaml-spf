@@ -1,3 +1,5 @@
+open Printf
+
 type t = Unix.inet_addr * int
 
 let of_string s =
@@ -48,4 +50,5 @@ let includes ip net =
       let prefix'' = ipv6_of_string prefix' in
       let ip'' = ipv6_of_string ip' in
       Uint128.logand prefix'' mask = Uint128.logand ip'' mask
-  | _ -> invalid_arg "Network.includes"
+  | _ ->
+      false
