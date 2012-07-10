@@ -42,7 +42,7 @@ dns_type_of_val(value v)
 static void
 spf_error(const char *err)
 {
-    caml_raise_with_string(*caml_named_value("Spf.Spf_error"), err);
+    caml_raise_with_string(*caml_named_value("SPF.SPF_error"), err);
 }
 
 static void

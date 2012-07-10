@@ -1,1 +1,1 @@
-val handle_attrs : Spf.server -> Postfix.attrs -> string Lwt.t
+val handle_attrs : SPF.server -> Postfix.attrs -> string Lwt.t

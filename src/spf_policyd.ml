@@ -29,7 +29,7 @@ let handle_sigterm _ =
   exit 0
 
 let spf_handler fd =
-  let spf_server = Spf.server Spf.Dns_cache in
+  let spf_server = SPF.server SPF.Dns_cache in
   match_lwt Postfix.parse_attrs fd with
   | None ->
       return ()

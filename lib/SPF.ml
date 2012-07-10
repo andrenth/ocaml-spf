@@ -43,9 +43,9 @@ type response =
   ; header_comment     : string
   }
 
-exception Spf_error of string
+exception SPF_error of string
 
-let _ = Callback.register_exception "Spf.Spf_error" (Spf_error "")
+let _ = Callback.register_exception "SPF.SPF_error" (SPF_error "")
 
 external server : ?debug:bool -> dns -> server = "caml_spf_server_new"
 
@@ -91,7 +91,7 @@ let set_envelope_from req from =
 let process req =
   try
     `Response (query_mailfrom req.request)
-  with Spf_error err ->
+  with SPF_error err ->
     `Error err
 
 let check_helo server client_addr helo =

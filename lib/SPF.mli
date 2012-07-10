@@ -20,7 +20,7 @@ type result
   | Temperror
   | Permerror
 
-exception Spf_error of string
+exception SPF_error of string
 
 val server : ?debug:bool -> dns -> server
 

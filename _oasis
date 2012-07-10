@@ -9,7 +9,7 @@ Library spf
   Path:            lib
   BuildTools:      ocamlbuild
   CompiledObject:  best
-  Modules:         Spf
+  Modules:         SPF
   CSources:        spf_stubs.c
   CCLib:           -lspf2
   CCOpt:           -Wall -Werror

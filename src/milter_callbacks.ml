@@ -4,7 +4,7 @@ open Util
 type result
   = No_result
   | Whitelisted of string
-  | Spf_response of Spf.response
+  | Spf_response of SPF.response
 
 type priv =
   { addr   : Unix.inet_addr
@@ -12,7 +12,7 @@ type priv =
   ; result : result
   }
 
-let spf_server = Spf.server Spf.Dns_cache
+let spf_server = SPF.server SPF.Dns_cache
 
 let config = Config.default
 
@@ -50,13 +50,13 @@ let milter_tempfail ctx comment =
 let spf_check_helo ctx priv =
   let addr = priv.addr in
   let helo = some (priv.helo) in
-  let spf_res = unbox_spf (Spf.check_helo spf_server addr helo) in
-  let milter_res = match Spf.result spf_res with
-  | Spf.Fail c ->
-      milter_reject ctx (Spf.smtp_comment c)
-  | Spf.Temperror ->
+  let spf_res = unbox_spf (SPF.check_helo spf_server addr helo) in
+  let milter_res = match SPF.result spf_res with
+  | SPF.Fail c ->
+      milter_reject ctx (SPF.smtp_comment c)
+  | SPF.Temperror ->
       if config.Config.fail_on_helo_temperror then
-        milter_tempfail ctx (Spf.header_comment spf_res)
+        milter_tempfail ctx (SPF.header_comment spf_res)
       else
         Milter.Continue
   | _ ->
@@ -66,10 +66,10 @@ let spf_check_helo ctx priv =
 let spf_check_from ctx priv from =
   let addr = priv.addr in
   let helo = some (priv.helo) in
-  let spf_res = unbox_spf (Spf.check_from spf_server addr helo from) in
-  let milter_res = match Spf.result spf_res with
-  | Spf.Fail c -> milter_reject ctx (Spf.smtp_comment c)
-  | Spf.Temperror -> milter_tempfail ctx (Spf.header_comment spf_res)
+  let spf_res = unbox_spf (SPF.check_from spf_server addr helo from) in
+  let milter_res = match SPF.result spf_res with
+  | SPF.Fail c -> milter_reject ctx (SPF.smtp_comment c)
+  | SPF.Temperror -> milter_tempfail ctx (SPF.header_comment spf_res)
   | _ -> Milter.Continue in
   spf_res, milter_res
 
@@ -149,7 +149,7 @@ let eom ctx =
       (match priv.result with
       | No_result -> ()
       | Whitelisted s -> milter_add_header ctx s
-      | Spf_response r -> milter_add_header ctx (Spf.received_spf r));
+      | Spf_response r -> milter_add_header ctx (SPF.received_spf r));
       priv, Milter.Continue)
 
 let abort ctx =

@@ -9,13 +9,13 @@ type response
 
 type cache =
   { instance                 : string
-  ; mutable helo_response    : Spf.response option
-  ; mutable from_response    : Spf.response option
+  ; mutable helo_response    : SPF.response option
+  ; mutable from_response    : SPF.response option
   ; mutable spf_header_added : bool
   ; mutable timestamp        : float
   }
 
-type handler = (Spf.server -> Postfix.attrs -> cache -> response Lwt.t)
+type handler = (SPF.server -> Postfix.attrs -> cache -> response Lwt.t)
 
 let new_cache_entry instance =
   { instance         = instance
@@ -77,51 +77,51 @@ let fail_on_helo_temperror = true
 
 let handle_helo_response sender cache =
   let res = some cache.helo_response in
-  match Spf.result res with
-  | Spf.Fail comment ->
-      Five_zero_five (Spf.smtp_comment comment)
-  | Spf.Temperror ->
+  match SPF.result res with
+  | SPF.Fail comment ->
+      Five_zero_five (SPF.smtp_comment comment)
+  | SPF.Temperror ->
       if fail_on_helo_temperror then
-        let comment = Spf.header_comment res in
+        let comment = SPF.header_comment res in
         Defer_if_permit (sprintf "SPF-Result=%s" comment)
       else
         Dunno
   | _ ->
       if sender = "" && not cache.spf_header_added then begin
         cache.spf_header_added <- true;
-        let expl = match Spf.result res with
-        | Spf.Neutral c | Spf.Fail c
-        | Spf.Softfail c ->
-            sprintf " %s" (Spf.smtp_comment c)
+        let expl = match SPF.result res with
+        | SPF.Neutral c | SPF.Fail c
+        | SPF.Softfail c ->
+            sprintf " %s" (SPF.smtp_comment c)
         | _ ->
             "" in
-        Prepend (sprintf "%s%s" (Spf.received_spf res) expl)
+        Prepend (sprintf "%s%s" (SPF.received_spf res) expl)
       end else
         Dunno
 
 let handle_from_response cache =
   let res = some cache.from_response in
-  match Spf.result res with
-  | Spf.Fail comment ->
-      Five_zero_five (Spf.explanation comment)
-  | Spf.Temperror ->
-      let comment = Spf.header_comment res in
+  match SPF.result res with
+  | SPF.Fail comment ->
+      Five_zero_five (SPF.explanation comment)
+  | SPF.Temperror ->
+      let comment = SPF.header_comment res in
       Defer_if_permit (sprintf "SPF-Result=%s" comment)
   | _ ->
       if not cache.spf_header_added then begin
         cache.spf_header_added <- true;
-        let expl = match Spf.result res with
-        | Spf.Neutral c | Spf.Fail c
-        | Spf.Softfail c ->
-            sprintf " %s" (Spf.explanation c)
+        let expl = match SPF.result res with
+        | SPF.Neutral c | SPF.Fail c
+        | SPF.Softfail c ->
+            sprintf " %s" (SPF.explanation c)
         | _ ->
             "" in
-        Prepend (sprintf "%s%s" (Spf.received_spf res) expl)
+        Prepend (sprintf "%s%s" (SPF.received_spf res) expl)
       end else
         Dunno
 
 let check_helo server addr helo =
-  Lwt_preemptive.detach (fun () -> Spf.check_helo server addr helo) ()
+  Lwt_preemptive.detach (fun () -> SPF.check_helo server addr helo) ()
 
 let process_helo spf_server client_addr helo_name sender cache =
   lwt () = if cache.helo_response = None then begin
@@ -134,7 +134,7 @@ let process_helo spf_server client_addr helo_name sender cache =
   return (handle_helo_response sender cache)
 
 let check_from server addr helo sender =
-  Lwt_preemptive.detach (fun () -> Spf.check_from server addr helo sender) ()
+  Lwt_preemptive.detach (fun () -> SPF.check_from server addr helo sender) ()
 
 let process_from spf_server client_addr helo_name sender cache =
   lwt () = if cache.from_response = None then begin
