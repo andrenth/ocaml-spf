@@ -1,22 +1,24 @@
-OASISFormat: 0.2
+OASISFormat: 0.3
 Name:        spf
 Version:     0.1.0
 Synopsis:    OCaml SPF library
 Authors:     Andre Nathan
 License:     BSD3
 
+BuildTools:  ocamlbuild
+Plugins:     META (0.3)
+
 Library spf
-  Path:            lib
-  BuildTools:      ocamlbuild
-  CompiledObject:  best
-  Modules:         SPF
-  CSources:        spf_stubs.c
-  CCLib:           -lspf2
-  CCOpt:           -Wall -Werror
+  Path:             lib
+  CompiledObject:   best
+  Modules:          SPF
+  CSources:         spf_stubs.c
+  CCLib:            -lspf2
+  CCOpt:            -Wall -Werror
+  XMETADescription: OCaml SPF library
 
 Executable spf_test
   Path:            lib_test
-  BuildTools:      ocamlbuild
   MainIs:          test.ml
   Install:         false
   CompiledObject:  best

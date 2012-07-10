@@ -1,0 +1,11 @@
+# OASIS_START
+# DO NOT EDIT (digest: 876d198ae7fd774e4ea066f445e43bdc)
+version = "0.1.0"
+description = "OCaml SPF library"
+archive(byte) = "spf.cma"
+archive(byte, plugin) = "spf.cma"
+archive(native) = "spf.cmxa"
+archive(native, plugin) = "spf.cmxs"
+exists_if = "spf.cma"
+# OASIS_STOP
+
