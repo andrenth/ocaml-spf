@@ -79,7 +79,7 @@ let spf_check ctx priv from =
   | Milter.Continue -> spf_check_from ctx priv from
   | other -> spf_res, milter_res
 
-let spf_add_header ctx header =
+let milter_add_header ctx header =
   let sep = String.index header ':' in
   let field = String.sub header 0 sep in
   let value = String.sub header (sep + 2) (String.length header - sep - 2) in
@@ -88,7 +88,7 @@ let spf_add_header ctx header =
 let with_priv_data z ctx f =
   match Milter.getpriv ctx with
   | None -> z
-  | Some priv -> let p, r = f priv in Milter.setpriv ctx p; r
+  | Some p -> let p', r = f p in Milter.setpriv ctx p'; r
 
 module FlagSet = SetOfList(struct
   type t = Milter.flag
@@ -148,8 +148,8 @@ let eom ctx =
     (fun priv ->
       (match priv.result with
       | No_result -> ()
-      | Whitelisted s -> spf_add_header ctx s
-      | Spf_response r -> spf_add_header ctx (Spf.received_spf r));
+      | Whitelisted s -> milter_add_header ctx s
+      | Spf_response r -> milter_add_header ctx (Spf.received_spf r));
       priv, Milter.Continue)
 
 let abort ctx =
