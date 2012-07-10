@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 19321b07802ac40e0ade9d303475f179) *)
+(* DO NOT EDIT (digest: d9396bb3c93c63cad08e078f82e290cc) *)
 module OASISGettext = struct
 # 21 "/home/andre/src/oasis-0.3.0/src/oasis/OASISGettext.ml"
 
@@ -491,7 +491,7 @@ let package_default =
           (["oasis_library_spf_cclib"; "ocamlmklib"; "c"],
             [(OASISExpr.EBool true, S [A "-lspf2"])])
        ];
-     includes = [("src", ["lib"]); ("lib_test", ["lib"])];
+     includes = [("lib_test", ["lib"])];
      }
   ;;
 

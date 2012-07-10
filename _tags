@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: e048003be779e46cc3cbda2b41f971e1)
+# DO NOT EDIT (digest: 60709654e104d5cd41f09c4e273ec2d6)
 # Ignore VCS directories, you can use the same kind of rule outside 
 # OASIS_START/STOP if you want to exclude directories that contains 
 # useless stuff for the build process
@@ -23,49 +23,6 @@
 "lib/libspf_stubs.a": oasis_library_spf_cclib
 "lib/dllspf_stubs.so": oasis_library_spf_cclib
 <lib/spf.{cma,cmxa}>: use_libspf_stubs
-# Executable spfd
-<src/spfd.{native,byte}>: pkg_str
-<src/spfd.{native,byte}>: pkg_release
-<src/spfd.{native,byte}>: pkg_lwt
-<src/spfd.{native,byte}>: pkg_lwt.unix
-<src/spfd.{native,byte}>: pkg_lwt.syntax
-# Executable spf-policyd
-<src/spf_policyd.{native,byte}>: use_spf
-<src/spf_policyd.{native,byte}>: pkg_unix
-<src/spf_policyd.{native,byte}>: pkg_str
-<src/spf_policyd.{native,byte}>: pkg_threads
-<src/spf_policyd.{native,byte}>: pkg_uint.uint32
-<src/spf_policyd.{native,byte}>: pkg_uint.uint128
-<src/spf_policyd.{native,byte}>: pkg_release
-<src/spf_policyd.{native,byte}>: pkg_lwt
-<src/spf_policyd.{native,byte}>: pkg_lwt.unix
-<src/spf_policyd.{native,byte}>: pkg_lwt.syntax
-<src/spf_policyd.{native,byte}>: pkg_lwt.preemptive
-# Executable spf-milter
-<src/spf_milter.{native,byte}>: use_spf
-<src/spf_milter.{native,byte}>: pkg_unix
-<src/spf_milter.{native,byte}>: pkg_milter
-<src/spf_milter.{native,byte}>: pkg_str
-<src/spf_milter.{native,byte}>: pkg_threads
-<src/spf_milter.{native,byte}>: pkg_uint.uint32
-<src/spf_milter.{native,byte}>: pkg_uint.uint128
-<src/spf_milter.{native,byte}>: pkg_release
-<src/spf_milter.{native,byte}>: pkg_lwt
-<src/spf_milter.{native,byte}>: pkg_lwt.unix
-<src/spf_milter.{native,byte}>: pkg_lwt.syntax
-<src/spf_milter.{native,byte}>: pkg_lwt.preemptive
-<src/*.ml{,i}>: use_spf
-<src/*.ml{,i}>: pkg_unix
-<src/*.ml{,i}>: pkg_milter
-<src/*.ml{,i}>: pkg_str
-<src/*.ml{,i}>: pkg_threads
-<src/*.ml{,i}>: pkg_uint.uint32
-<src/*.ml{,i}>: pkg_uint.uint128
-<src/*.ml{,i}>: pkg_release
-<src/*.ml{,i}>: pkg_lwt
-<src/*.ml{,i}>: pkg_lwt.unix
-<src/*.ml{,i}>: pkg_lwt.syntax
-<src/*.ml{,i}>: pkg_lwt.preemptive
 # Executable spf_test
 <lib_test/test.{native,byte}>: use_spf
 <lib_test/test.{native,byte}>: pkg_unix
@@ -74,8 +31,3 @@
 # OASIS_STOP
 <*/*.ml>: annot
 <*/*.ml>: warn_error
-<src/policy.ml>: syntax_camlp4o
-<src/postfix.ml>: syntax_camlp4o
-<src/spfd.ml>: syntax_camlp4o
-<src/spf_policyd.ml>: syntax_camlp4o
-<src/spf_milter.ml>: syntax_camlp4o
