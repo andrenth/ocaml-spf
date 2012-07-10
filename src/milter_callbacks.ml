@@ -1,29 +1,18 @@
 open Printf
 open Util
 
-type spf_result
- = Response of Spf.response
- | Whitelisted of string
- | No_result
- 
+type result
+  = No_result
+  | Whitelisted of string
+  | Spf_response of Spf.response
 
 type priv =
-  { spf_server         : Spf.server
-  ; addr               : Unix.inet_addr option
-  ; mutable helo       : string
-  ; mutable from       : string
-  ; mutable is_auth    : bool
-  ; mutable spf_result : spf_result
+  { addr   : Unix.inet_addr
+  ; helo   : string option
+  ; result : result
   }
 
-let default_priv =
-  { spf_server = Spf.server Spf.Dns_cache
-  ; addr       = None
-  ; helo       = ""
-  ; from       = ""
-  ; is_auth    = false
-  ; spf_result = No_result
-  }
+let spf_server = Spf.server Spf.Dns_cache
 
 let config = Config.default
 
@@ -59,36 +48,36 @@ let milter_tempfail ctx comment =
   Milter.Tempfail
 
 let spf_check_helo ctx priv =
-  let addr = some (priv.addr) in
-  let helo = priv.helo in
-  let res = unbox_spf (Spf.check_helo priv.spf_server addr helo) in
-  priv.spf_result <- Response res;
-  match Spf.result res with
+  let addr = priv.addr in
+  let helo = some (priv.helo) in
+  let spf_res = unbox_spf (Spf.check_helo spf_server addr helo) in
+  let milter_res = match Spf.result spf_res with
   | Spf.Fail c ->
       milter_reject ctx (Spf.smtp_comment c)
   | Spf.Temperror ->
       if config.Config.fail_on_helo_temperror then
-        milter_tempfail ctx (Spf.header_comment res)
+        milter_tempfail ctx (Spf.header_comment spf_res)
       else
         Milter.Continue
   | _ ->
-      Milter.Continue
+      Milter.Continue in
+  spf_res, milter_res
 
-let spf_check_from ctx priv =
-  let addr = some (priv.addr) in
-  let helo = priv.helo in
-  let from = priv.from in
-  let res = unbox_spf (Spf.check_from priv.spf_server addr helo from) in
-  priv.spf_result <- Response res;
-  match Spf.result res with
+let spf_check_from ctx priv from =
+  let addr = priv.addr in
+  let helo = some (priv.helo) in
+  let spf_res = unbox_spf (Spf.check_from spf_server addr helo from) in
+  let milter_res = match Spf.result spf_res with
   | Spf.Fail c -> milter_reject ctx (Spf.smtp_comment c)
-  | Spf.Temperror -> milter_tempfail ctx (Spf.header_comment res)
-  | _ -> Milter.Continue
+  | Spf.Temperror -> milter_tempfail ctx (Spf.header_comment spf_res)
+  | _ -> Milter.Continue in
+  spf_res, milter_res
 
-let spf_check ctx priv =
-  match spf_check_helo ctx priv with
-  | Milter.Continue -> spf_check_from ctx priv
-  | other -> other
+let spf_check ctx priv from =
+  let spf_res, milter_res = spf_check_helo ctx priv in
+  match milter_res with
+  | Milter.Continue -> spf_check_from ctx priv from
+  | other -> spf_res, milter_res
 
 let spf_add_header ctx header =
   let sep = String.index header ':' in
@@ -96,14 +85,10 @@ let spf_add_header ctx header =
   let value = String.sub header (sep + 2) (String.length header - sep - 2) in
   Milter.addheader ctx field value
 
-let with_priv_data ctx f =
+let with_priv_data z ctx f =
   match Milter.getpriv ctx with
-  | None ->
-      invalid_arg "no private data"
-  | Some priv ->
-      let r = f priv in
-      Milter.setpriv ctx priv;
-      r
+  | None -> z
+  | Some priv -> let p, r = f priv in Milter.setpriv ctx p; r
 
 module FlagSet = SetOfList(struct
   type t = Milter.flag
@@ -115,16 +100,18 @@ module StepSet = SetOfList(struct
   let compare = compare
 end)
 
+let whitelist s =
+  Whitelisted s
+
 (* Callbacks *)
 
 let connect ctx host addr =
   let addr = default Unix.inet_addr_loopback inet_addr_of_sockaddr addr in
-  let spf_result =
-    default No_result (fun s -> Whitelisted s) (Whitelist.check addr) in
+  let result = default No_result whitelist (Whitelist.check addr) in
   let priv =
-    { default_priv with
-      addr       = Some addr
-    ; spf_result = spf_result
+    { addr   = addr
+    ; helo   = None
+    ; result = result
     } in
   Milter.setpriv ctx priv;
   Milter.Continue
@@ -135,55 +122,44 @@ let helo ctx helo =
       Milter.setreply ctx "503" (Some "5.0.0") (Some "Please say HELO");
       Milter.Reject
   | Some name ->
-      with_priv_data ctx
-        (fun priv ->
-          priv.helo <- name;
-          Milter.Continue)
+      with_priv_data Milter.Tempfail ctx
+        (fun priv -> { priv with helo = Some name }, Milter.Continue)
 
 let envfrom ctx from args =
-  with_priv_data ctx
+  let is_auth = Milter.getsymval ctx "{auth_authen}" <> None in
+  let verified = default false ((=)"OK") (Milter.getsymval ctx "{verify}") in
+  with_priv_data Milter.Tempfail ctx
     (fun priv ->
-      let auth = Milter.getsymval ctx "{auth_authen}" in
-      let verif = default false ((=)"OK") (Milter.getsymval ctx "{verify}") in
-      if auth <> None || verif then begin
-        priv.is_auth <- true;
-        priv.spf_result <- Whitelisted ("X-Comment: authenticated client");
-        Milter.Continue
-      end else begin
-        priv.from <- canonicalize from;
-        match priv.spf_result with
-        | No_result -> spf_check ctx priv
-        | _ -> Milter.Continue (* whitelisted *)
-      end)
+      if is_auth || verified then
+        let result = Whitelisted "X-Comment: authenticated client" in
+        { priv with result = result }, Milter.Continue
+      else
+        match priv.result with
+        | No_result ->
+            let spf_res, milter_res = spf_check ctx priv (canonicalize from) in
+            { priv with result = Spf_response spf_res }, milter_res
+        | Whitelisted _ ->
+            priv, Milter.Continue
+        | Spf_response _ ->
+            invalid_arg "envfrom") (* not possible here *)
 
 let eom ctx =
-  let priv = some (Milter.getpriv ctx) in
-  (match priv.spf_result with
-  | No_result -> ()
-  | Whitelisted s -> spf_add_header ctx s
-  | Response r -> spf_add_header ctx (Spf.received_spf r));
-  Milter.Continue
+  with_priv_data Milter.Tempfail ctx
+    (fun priv ->
+      (match priv.result with
+      | No_result -> ()
+      | Whitelisted s -> spf_add_header ctx s
+      | Spf_response r -> spf_add_header ctx (Spf.received_spf r));
+      priv, Milter.Continue)
 
 let abort ctx =
-  match Milter.getpriv ctx with
-  | None ->
-      Milter.Continue
-  | Some priv ->
-      let priv' =
-        { default_priv with
-          addr = priv.addr
-        ; helo = priv.helo
-        } in
-      Milter.setpriv ctx priv';
-      Milter.Continue
+  with_priv_data Milter.Continue ctx
+    (fun priv ->
+      { priv with result = No_result }, Milter.Continue)
 
 let close ctx =
-  match Milter.getpriv ctx with
-  | None ->
-      Milter.Continue
-  | Some _ ->
-      Milter.setpriv ctx default_priv;
-      Milter.Continue
+  maybe (fun _ -> Milter.unsetpriv ctx) (Milter.getpriv ctx);
+  Milter.Continue
 
 let negotiate ctx actions steps =
   let reqactions = [Milter.ADDHDRS] in

@@ -6,6 +6,7 @@ if [ ! `which milter-test-server` ]; then
 fi
 
 runtest() {
+  [ -n "$DEBUG" ] && echo $1
   echo "$1" | grep -q "$2"
 }
 

@@ -18,6 +18,11 @@ let inet_addr_of_sockaddr = function
   | Unix.ADDR_INET (a, _) -> a
   | Unix.ADDR_UNIX s -> invalid_arg ("inet_addr_of_sockaddr "^s)
 
+let (<?>) opt z =
+  match opt with
+  | None -> z
+  | Some x -> x
+
 let (<|>) opt1 opt2 =
   match opt1 with
   | None -> opt2
