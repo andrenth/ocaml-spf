@@ -224,6 +224,7 @@ caml_spf_request_query_mailfrom(value req_val)
 {
     CAMLparam1(req_val);
     CAMLlocal3(ret, cmt, res);
+    const char *s;
     SPF_request_t *req = (SPF_request_t *)Data_custom_val(req_val);
     SPF_response_t *resp;
     SPF_result_t result;
@@ -260,11 +261,18 @@ caml_spf_request_query_mailfrom(value req_val)
     }
 
     Store_field(ret, 1, Val_int(SPF_response_reason(resp)));
-    Store_field(ret, 2, caml_copy_string(SPF_response_get_received_spf(resp)));
-    Store_field(ret, 3,
-                caml_copy_string(SPF_response_get_received_spf_value(resp)));
-    Store_field(ret, 4,
-                 caml_copy_string(SPF_response_get_header_comment(resp)));
+
+/* For buggy libspf2 - avoid a segfault */
+#define BUG_HEADER_COMMENT "internal error"
+#define BUG_RECEIVED_SPF_VALUE "none (" BUG_HEADER_COMMENT ")"
+#define BUG_RECEIVED_SPF "Received-SPF: " BUG_RECEIVED_SPF_VALUE
+
+    s = SPF_response_get_received_spf(resp);
+    Store_field(ret, 2, caml_copy_string(s ? s : BUG_RECEIVED_SPF));
+    s = SPF_response_get_received_spf_value(resp);
+    Store_field(ret, 3, caml_copy_string(s ? s : BUG_RECEIVED_SPF_VALUE));
+    s = SPF_response_get_header_comment(resp);
+    Store_field(ret, 4, caml_copy_string(s ? s : BUG_HEADER_COMMENT));
 
     SPF_response_free(resp);
 
