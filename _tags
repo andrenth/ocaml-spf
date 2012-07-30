@@ -30,4 +30,4 @@
 <lib_test/*.ml{,i}>: pkg_unix
 # OASIS_STOP
 <*/*.ml>: annot
-<*/*.ml>: warn_error
+<*/*.ml>: warn_error_A
