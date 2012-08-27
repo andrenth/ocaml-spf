@@ -23,19 +23,14 @@ type result
 exception SPF_error of string
 
 val server : ?debug:bool -> dns -> server
+val free_server : server -> unit
 
 val request : server -> request
+val free_request : request -> unit
 
-val check_helo : server
-              -> Unix.inet_addr
-              -> string
-              -> [`Response of response | `Error of string]
+val check_helo : server -> Unix.inet_addr -> string -> response
 
-val check_from : server
-              -> Unix.inet_addr
-              -> string
-              -> string
-              -> [`Response of response | `Error of string]
+val check_from : server -> Unix.inet_addr -> string -> string -> response
 
 val result : response -> result
 val reason : response -> reason
