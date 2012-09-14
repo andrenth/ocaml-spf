@@ -30,7 +30,7 @@ val free_request : request -> unit
 
 val check_helo : server -> Unix.inet_addr -> string -> response
 
-val check_from : server -> Unix.inet_addr -> string -> string -> response
+val check_from : server -> Unix.inet_addr -> string -> response
 
 val result : response -> result
 val reason : response -> reason

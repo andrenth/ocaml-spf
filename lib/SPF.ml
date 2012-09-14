@@ -110,11 +110,12 @@ let check_helo server client_addr helo =
     free_request req in
   finalize check close req
 
-let check_from server client_addr helo from =
+let check_from server client_addr from =
+  if not (String.contains from '@') then
+    raise (SPF_error ("invalid from address: " ^ from));
   let req = request server in
   let check req =
     set_inet_addr req client_addr;
-    set_helo_domain req helo;
     set_envelope_from req from;
     query_mailfrom req in
   let close req =
