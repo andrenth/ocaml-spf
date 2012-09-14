@@ -23,3 +23,10 @@ Executable spf_test
   Install:         false
   CompiledObject:  best
   BuildDepends:    spf, unix
+
+Document "spf"
+  Title:                SPF documentation
+  Type:                 ocamlbuild (0.3)
+  BuildTools+:          ocamldoc
+  XOCamlbuildPath:      lib
+  XOCamlbuildLibraries: spf

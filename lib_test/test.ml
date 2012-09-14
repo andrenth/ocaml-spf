@@ -1,8 +1,8 @@
 open Printf
 
-let check_from server client_addr helo from =
+let check_from server client_addr from =
   try
-    let r = SPF.check_from server client_addr helo from in
+    let r = SPF.check_from server client_addr from in
     `Response r
   with SPF.SPF_error e ->
     `Error e
@@ -17,9 +17,9 @@ let check_helo server client_addr helo =
 let () =
   let server = SPF.server SPF.Dns_cache in
   let client_addr = Unix.inet_addr_of_string "187.73.32.159" in
-  let helo = "mta98.f1.k8.com.br" in
+  let _helo = "mta98.f1.k8.com.br" in
   let from = "andre@andrenathan.com" in
-  match check_from server client_addr helo from with
+  match check_from server client_addr from with
   | `Error e ->
       printf "SPF error: %s\n%!" e
   | `Response r ->
