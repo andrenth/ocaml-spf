@@ -6,7 +6,7 @@ This library provides OCaml bindings to [libspf2](http://www.libspf2.org/).
 
 ## Build and installation
 
-After cloning the repository, run the commands below to build OCaml-Milter.
+After cloning the repository, run the commands below to build OCaml-SPF.
 
     $ ocaml setup.ml -configure
     $ ocaml setup.ml -build
