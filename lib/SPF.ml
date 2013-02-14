@@ -128,7 +128,7 @@ let string_of_result = function
   | Pass -> "pass"
   | Fail _ -> "fail"
   | Softfail _ -> "softfail"
-  | None _ -> "none"
+  | None -> "none"
   | Temperror -> "temperror"
   | Permerror -> "permerror"
 
