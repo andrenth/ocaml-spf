@@ -4,14 +4,14 @@ let check_from server client_addr from =
   try
     let r = SPF.check_from server client_addr from in
     `Response r
-  with SPF.SPF_error e ->
+  with SPF.Error e ->
     `Error e
 
 let check_helo server client_addr helo =
   try
     let r = SPF.check_helo server client_addr helo in
     `Response r
-  with SPF.SPF_error e ->
+  with SPF.Error e ->
     `Error e
 
 let () =

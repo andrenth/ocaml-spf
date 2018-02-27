@@ -43,9 +43,9 @@ type response =
   ; header_comment     : string
   }
 
-exception SPF_error of string
+exception Error of string
 
-let _ = Callback.register_exception "SPF.SPF_error" (SPF_error "")
+let _ = Callback.register_exception "Error" (Error "")
 
 external server : ?debug:bool -> dns -> server = "caml_spf_server_new"
 external free_server : server -> unit = "caml_spf_server_free"
@@ -112,7 +112,7 @@ let check_helo server client_addr helo =
 
 let check_from server client_addr from =
   if not (String.contains from '@') then
-    raise (SPF_error ("invalid from address: " ^ from));
+    raise (Error ("invalid from address: " ^ from));
   let req = request server in
   let check req =
     set_inet_addr req client_addr;

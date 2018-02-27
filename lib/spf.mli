@@ -35,7 +35,7 @@ type result
   | Temperror
   | Permerror
 
-exception SPF_error of string
+exception Error of string
   (** Exception raised by SPF functions in case of errors. *)
 
 val server : ?debug:bool -> dns -> server
