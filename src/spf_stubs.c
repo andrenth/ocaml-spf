@@ -132,7 +132,7 @@ caml_spf_request_set_inet_addr(value req_val, value addr)
     SPF_request_t *req = (SPF_request_t *)req_val;
     struct sockaddr_storage ss;
     socklen_t ss_len;
-    SPF_errcode_t e;
+    SPF_errcode_t e = SPF_E_SUCCESS;
 
     spf_get_sockaddr(addr, &ss, &ss_len);
     switch (ss.ss_family) {
