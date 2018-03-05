@@ -5,6 +5,8 @@
 #include <netinet/in.h>
 #include <sys/un.h>
 
+#include <time.h> /* For time_t in spf_dns_rr.h */
+
 #include <spf2/spf.h>
 #include <spf2/spf_server.h>
 #include <spf2/spf_request.h>
